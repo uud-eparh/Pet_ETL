@@ -30,7 +30,7 @@
 
 1. **Клонируйте репозиторий:**
 bash
-git clone <your-repo-url>
+git clone <https://github.com/uud-eparh/Pet_ETL.git>
 cd Pet_001_ETL
 Настройте виртуальное окружение:
 
@@ -71,13 +71,15 @@ python main.py --mode historical --start-date 2024-01-01 --end-date 2024-01-31
 
 bash
 python main.py --mode daily-only --target-date 2024-01-15
-Скрипты для разных ОС:
+
+
+### Скрипты для разных ОС:
 
 bash
-### Windows
+#### Windows
 run_etl.bat
 
-### Linux/Mac
+#### Linux/Mac
 ./run_etl.sh --mode historical --historical-last-days 7
 
 ### 🗄️ Структура проекта
