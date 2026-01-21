@@ -67,7 +67,8 @@ python main.py --mode historical --historical-last-days 30
 
 ### За конкретный период
 python main.py --mode historical --start-date 2024-01-01 --end-date 2024-01-31
-Только ежедневные данные:
+
+### Только ежедневные данные:
 
 bash
 python main.py --mode daily-only --target-date 2024-01-15
@@ -155,10 +156,3 @@ chmod +x run_etl.sh
 
 ### Для директорий
 chmod 755 logs reports data
-📈 Дальнейшее развитие
-Потенциальные улучшения:
-Мониторинг: Добавить Prometheus/Grafana
-Уведомления: Slack/Telegram бот при ошибках
-Кэширование: Redis для временного хранения данных
-Тесты: pytest для модульного тестирования
-Airflow: Миграция на Apache Airflow для оркестрации
