@@ -1,0 +1,61 @@
+# .gitignore для Python/ETL проекта
+
+# Вендорные зависимости
+.venv/
+venv/
+env/
+ENV/
+
+# Байт-код
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Логи и отчеты (можно хранить примеры)
+logs/*
+!logs/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# Данные (кроме тестовых примеров)
+data/*
+!data/*_test.json
+!data/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Операционные системы
+.DS_Store
+Thumbs.db
+
+# Базы данных (локальные)
+*.db
+*.sqlite3
+pgdata/
+
+# Конфигурационные файлы с чувствительными данными
+secrets.ini
+config_local.py
+.env
+
+# Временные файлы
+temp/
+tmp/
+
+# Докер
+docker-compose.override.yml
+
+# Пип
+pip-log.txt
+
+# В .gitignore добавьте:
+.env
+*.env
+.env.local
+.env.*.local
+secrets/
+credentials/
