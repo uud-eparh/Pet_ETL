@@ -28,7 +28,7 @@
 
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/uud-eparh/Pet_ETL/tree/feature/airflow-grafana
+git clone https://github.com/uud-eparh/Pet_ETL.git
 cd pet_etl_airflow
 
 # Запустить все сервисы
