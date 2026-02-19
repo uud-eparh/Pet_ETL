@@ -1,0 +1,19 @@
+# grafana/provisioning/datasources/postgres.yaml
+apiVersion: 1
+
+datasources:
+  - name: PostgreSQL_CBR
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: etl_airflow
+    user: admin
+    secureJsonData:
+      password: admin
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1500  # PostgreSQL 15
+      timescaledb: false
+    editable: true
+    # Добавляем схему по умолчанию для запросов
+    schema: cbr_dm

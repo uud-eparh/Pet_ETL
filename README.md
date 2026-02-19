@@ -1,158 +1,226 @@
-# ETL-пайплайн для курсов валют ЦБ РФ
+# Проект ETL-пайплайна для курсов валют ЦБ РФ
 
-Автоматический сбор ежедневных и ежемесячных курсов валют из API Центробанка РФ.
+## 📋 Описание проекта
+Автоматизированный ETL-пайплайн для сбора, обработки и визуализации курсов валют Центрального банка Российской Федерации. Проект включает в себя полный цикл данных: от извлечения из API до построения аналитических дашбордов.
 
-## 📋 Функциональность
+## 🏗 Архитектура
 
-### Основные возможности:
-- 📅 **Ежедневные курсы валют** через SOAP API
-- 📊 **Ежемесячные средние курсы** через REST API
-- 🗄️ **Загрузка в PostgreSQL** с поддержкой UPSERT
-- 📈 **Историческая загрузка** за любой период
-- 📝 **Детальное логирование** в файлы и консоль
-- 📄 **Автоматические отчеты** о выполнении
-- 🐳 **Docker-контейнеризация** БД
+### Компоненты системы:
+- **Источники данных**: SOAP API (ежедневные курсы) и REST API (ежемесячные курсы) ЦБ РФ
+- **Оркестрация**: Apache Airflow 2.10.3
+- **Хранилище**: PostgreSQL 15
+- **Разработка**: VSCode в браузере (code-server)
+- **Визуализация**: Grafana
+- **Инфраструктура**: Docker + Docker Compose
 
-### Режимы работы:
-- `full` - полная загрузка (ежедневные + ежемесячные)
-- `daily-only` - только ежедневные данные
-- `monthly-only` - только ежемесячные данные
-- `historical` - историческая загрузка за период
+### Структура базы данных:
+- `cbr_raw` - сырые данные (таблица exchange_rates)
+- `cbr_dm` - витрины данных (материализованные представления)
 
 ## 🚀 Быстрый старт
 
-### Требования:
-- Python 3.11+
-- PostgreSQL 15+ (или Docker)
-- Docker Desktop (опционально)
+### Предварительные требования:
+- Docker и Docker Compose
+- Git
+- 4+ GB свободной оперативной памяти
 
-### Установка:
+### Установка и запуск:
 
-1. **Клонируйте репозиторий:**
-bash
-git clone <https://github.com/uud-eparh/Pet_ETL.git>
-cd Pet_001_ETL
-Настройте виртуальное окружение:
+```bash
+# Клонировать репозиторий
+git clone <url-репозитория>
+cd pet_etl_airflow
 
-bash
-python -m venv .venv
-
-### Windows:
-.venv\Scripts\activate
-
-### Linux/Mac:
-source .venv/bin/activate
-Установите зависимости:
-
-bash
-pip install -r requirements.txt
-Запустите базу данных:
-
-bash
+# Запустить все сервисы
 docker-compose up -d
-Настройте конфигурацию (при необходимости):
 
-bash
-### Отредактируйте config.py если нужно изменить настройки
-Использование:
-Базовый запуск:
+# Проверить статус
+docker-compose ps
 
-bash
-python main.py
-Загрузка исторических данных:
+# Просмотр логов (опционально)
+docker-compose logs -f
+Доступ к сервисам:
+Сервис	URL	Логин/Пароль
+Grafana	http://localhost:3000	admin/admin
+Airflow	http://localhost:7005	admin/admin
+VSCode	http://localhost:7090	admin
+📊 Дашборды Grafana
+После запуска автоматически создается дашборд "Аналитика курсов валют ЦБ РФ" с панелями:
 
-bash
-### За последние 30 дней
-python main.py --mode historical --historical-last-days 30
+Ключевые метрики:
 
-### За конкретный период
-python main.py --mode historical --start-date 2024-01-01 --end-date 2024-01-31
+Общее количество записей
 
-### Только ежедневные данные:
+Количество уникальных валют
 
-bash
-python main.py --mode daily-only --target-date 2024-01-15
+Статистика загрузок за 7 дней
 
+Динамика курсов:
 
-### Скрипты для разных ОС:
+Курс USD за 30 дней
 
-bash
-#### Windows
-run_etl.bat
+Сравнение USD, EUR, CNY с флагами стран
 
-#### Linux/Mac
-./run_etl.sh --mode historical --historical-last-days 7
+Аналитика:
 
-### 🗄️ Структура проекта
+Топ-10 волатильных валют
+
+Процентные изменения
+
+Статистика загрузок ETL
+
+🔄 ETL процессы (Airflow)
+Регулярные DAGs:
+cbr_exchange_rates_etl - ежедневный сбор данных (в 18:00)
+
+cbr_refresh_marts - обновление витрин (в 18:30)
+
+Ручные DAGs:
+cbr_historical_load - загрузка за произвольный период с параметрами:
+
+start_date: начальная дата
+
+end_date: конечная дата
+
+skip_weekends: пропускать выходные
+
+load_type: daily_only / monthly_only / both
+
+📁 Структура проекта
 text
-Pet_001_ETL/
-├── src/                    # Исходный код
-│   ├── extractors/         # Модули извлечения данных
-│   │   ├── daily_extractor.py     # SOAP API (ежедневные)
-│   │   ├── monthly_extractor.py   # REST API (ежемесячные)
-│   │   └── historical_extractor.py # Исторические данные
-│   └── loaders/            # Модули загрузки
-│       └── db_loader.py    # Загрузка в PostgreSQL
-├── data/                   # Тестовые данные и примеры
-├── logs/                   # Логи выполнения
-├── reports/                # Отчеты о загрузке
-├── init_db/                # SQL скрипты инициализации БД
-├── config.py               # Основная конфигурация
-├── historical_config.py    # Конфигурация исторической загрузки
-├── logging_config.py       # Настройка логирования
-├── main.py                 # Главный скрипт ETL
-├── docker-compose.yml      # Конфигурация Docker
-├── requirements.txt        # Зависимости Python
-└── README.md              # Документация
-
-🗄️ Структура базы данных
-Таблица exchange_rates:
-
-Поле	Тип	Описание
-id	SERIAL	Первичный ключ
-currency_code	VARCHAR(3)	Код валюты (USD, EUR)
-currency_name	VARCHAR(100)	Название валюты
-exchange_rate	DECIMAL(12,6)	Курс к рублю
-rate_date	DATE	Дата курса
-rate_type	VARCHAR(10)	Тип: 'daily' или 'monthly'
-nominal	INTEGER	Номинал валюты
-load_timestamp	TIMESTAMP	Время загрузки
-Индексы:
-Уникальный индекс: (currency_code, rate_date, rate_type)
-Индекс по дате: rate_date
-Индекс по валюте: currency_code
-
-### 🔧 Конфигурация
-Основные файлы конфигурации:
-config.py - основные настройки:
-Параметры подключения к БД
-URL API Центробанка
-Таймауты и лимиты
-historical_config.py - предопределенные периоды:
-last_week, last_month, last_quarter
-Годовые периоды (2023, 2024)
-docker-compose.yml - настройка PostgreSQL контейнера
-
-## 🐛 Устранение неполадок
-Частые проблемы:
-Не удается подключиться к БД:
-
+pet_etl_airflow/
+├── docker-compose.yml
+├── .env
+├── requirements.txt
+├── README.md
+├── src/
+│   ├── extractors/
+│   │   ├── daily_extractor.py      # SOAP API
+│   │   ├── monthly_extractor.py     # REST API
+│   │   └── historical_extractor.py  # Исторические данные
+│   └── loaders/
+│       └── db_loader.py             # Загрузка в PostgreSQL
+├── dags/
+│   ├── cbr_etl_dag.py               # Регулярный ETL
+│   ├── cbr_historical_load_dag.py    # Историческая загрузка
+│   └── cbr_refresh_marts_dag.py      # Обновление витрин
+├── init_db/
+│   ├── 01_create_schemas.sql
+│   ├── 02_create_raw_tables.sql
+│   └── 03_create_dm_tables.sql       # Витрины данных
+├── grafana/
+│   ├── provisioning/
+│   │   ├── datasources/
+│   │   │   └── postgres.yaml
+│   │   └── dashboards/
+│   │       └── dashboards.yaml
+│   └── dashboards/
+│       └── cbr_analytics.json
+├── logs/
+├── data/
+└── reports/
+📊 Витрины данных (cbr_dm)
+Витрина	Описание	Записей
+mv_daily_changes	Ежедневные изменения курсов	~19,600
+mv_weekly_stats	Недельная статистика	~2,800
+mv_monthly_stats	Месячная статистика	~700
+mv_quarterly_stats	Квартальная статистика	~250
+mv_top_volatile	Топ-10 волатильных валют	10
+mv_correlation_with_usd	Корреляция с USD	54
+mv_load_stats	Статистика загрузок	по дням
+🔧 Управление проектом
+Полезные команды:
 bash
-### Проверьте запущен ли Docker
-docker ps
+# Остановить все сервисы
+docker-compose down
 
-### Проверьте порт
-netstat -an | grep 6432
-Ошибки API Центробанка:
-Проверьте интернет-подключение
-API может быть недоступно в выходные
-Используйте --skip-weekends для пропуска выходных
+# Перезапустить конкретный сервис
+docker-compose restart airflow-webserver
 
-Не хватает прав:
+# Просмотр логов
+docker-compose logs -f [service-name]
 
+# Зайти в контейнер
+docker exec -it etl-postgres psql -U admin -d etl_airflow
+
+# Обновить витрины вручную
+docker exec -it etl-postgres psql -U admin -d etl_airflow -c "SELECT cbr_dm.refresh_all_mviews();"
+📈 Примеры SQL запросов
+Топ-5 самых волатильных валют за последние 30 дней:
+sql
+SELECT currency_code, volatility, avg_rate, min_rate, max_rate
+FROM cbr_dm.mv_top_volatile
+LIMIT 5;
+Динамика USD за последнюю неделю:
+sql
+SELECT rate_date, exchange_rate, pct_change
+FROM cbr_dm.mv_daily_changes
+WHERE currency_code = 'USD'
+  AND rate_date > CURRENT_DATE - INTERVAL '7 days'
+ORDER BY rate_date;
+Статистика загрузок:
+sql
+SELECT * FROM cbr_dm.mv_load_stats ORDER BY load_date DESC;
+🐛 Устранение неполадок
+Проблема: Не стартует контейнер
 bash
-### Для Linux скрипта
-chmod +x run_etl.sh
+# Проверить логи
+docker-compose logs [service-name]
 
-### Для директорий
-chmod 755 logs reports data
+# Пересоздать контейнер
+docker-compose rm -f [service-name]
+docker-compose up -d [service-name]
+Проблема: Нет данных в Grafana
+bash
+# Проверить подключение к БД
+docker exec -it etl-grafana bash
+curl http://localhost:3000/api/datasources
+
+# Проверить наличие данных
+docker exec -it etl-postgres psql -U admin -d etl_airflow -c "SELECT COUNT(*) FROM cbr_raw.exchange_rates;"
+Проблема: DAG не выполняется
+bash
+# Проверить статус scheduler
+docker logs etl-airflow-scheduler --tail 50
+
+# Перезапустить scheduler
+docker-compose restart airflow-scheduler
+📝 Примечания
+Данные обновляются: ежедневно в 18:00 (курсы за предыдущий день)
+
+Витрины обновляются: ежедневно в 18:30
+
+Хранение: PostgreSQL том монтируется для сохранения данных между перезапусками
+
+Логи: хранятся в папке logs/ на хосте
+
+🎯 Возможности для расширения
+Telegram бот для уведомлений о достижении целевых курсов
+
+Экспорт данных в Excel/CSV через Airflow
+
+Добавление новых валют в анализ
+
+Мониторинг через Prometheus
+
+ML-прогнозирование курсов валют
+
+Alerting в Grafana при аномальных изменениях
+
+👨‍💻 Автор
+Проект разработан в учебных целях для демонстрации навыков Data Engineering:
+
+Сбор данных из API
+
+ETL-процессы
+
+Оркестрация с Airflow
+
+Работа с PostgreSQL
+
+Визуализация в Grafana
+
+Docker-контейнеризация
+
+📄 Лицензия
+MIT
