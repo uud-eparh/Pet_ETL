@@ -290,9 +290,6 @@ class DatabaseLoader:
         """
         Вставка курсов валют в базу данных с использованием UPSERT.
         
-        Если запись уже существует (по currency_code, rate_date, rate_type),
-        она будет обновлена.
-        
         Args:
             rates_data: Список словарей с данными о курсах валют
             
@@ -312,9 +309,9 @@ class DatabaseLoader:
             logger.warning("Нет валидных данных для вставки после подготовки")
             return 0
         
-        # SQL запрос с UPSERT (INSERT или UPDATE при конфликте)
+        # ИСПРАВЛЕНИЕ: Добавляем схему cbr_raw к таблице
         insert_sql = """
-        INSERT INTO exchange_rates 
+        INSERT INTO cbr_raw.exchange_rates 
             (currency_code, currency_name, exchange_rate, rate_date, rate_type, nominal)
         VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT (currency_code, rate_date, rate_type) 
@@ -323,7 +320,7 @@ class DatabaseLoader:
             currency_name = EXCLUDED.currency_name,
             nominal = EXCLUDED.nominal,
             load_timestamp = CURRENT_TIMESTAMP
-        RETURNING id;  -- Возвращаем ID обработанных записей
+        RETURNING id;
         """
 
         inserted_count = 0
@@ -337,11 +334,10 @@ class DatabaseLoader:
                 self.cursor,
                 insert_sql,
                 prepared_data,
-                page_size=100 # 100 записей за один сетевой вызов
+                page_size=100
             )
 
             # Получаем количество обработанных строк
-            # Для UPSERT rowcount показывает сумму INSERT + UPDATE
             affected_rows = self.cursor.rowcount
 
             # Фиксируем транзакцию
@@ -355,15 +351,8 @@ class DatabaseLoader:
 
             return inserted_count
         
-        except psycopg2.IntegrityError as e:
-            # Ошибка целостности данных (нарушение constraints)
-            logger.error(f"Ошибка целостности данных: {e}")
-            self.connection.rollback()
-
-            return self._insert_one_by_one(prepared_data, insert_sql)
-        
         except Exception as e:
-            logger.error("Неожиданная ошибка при вставке: {e}", exc_info=True)
+            logger.error(f"Неожиданная ошибка при вставке: {e}", exc_info=True)
             self.connection.rollback()
             return 0
         

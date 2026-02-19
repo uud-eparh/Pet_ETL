@@ -44,7 +44,6 @@ docker-compose logs -f
 Grafana	http://localhost:3000	admin/admin
 Airflow	http://localhost:7005	admin/admin
 VSCode	http://localhost:7090	admin
-
 📊 Дашборды Grafana
 После запуска автоматически создается дашборд "Аналитика курсов валют ЦБ РФ" с панелями:
 

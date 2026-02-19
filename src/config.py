@@ -16,9 +16,9 @@ else:
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'postgres'),  # Значение по умолчанию
     'port': int(os.getenv('DB_PORT', '5432')),  # Конвертируем в int
-    'database': os.getenv('DB_NAME', '********'),
-    'user': os.getenv('DB_USER', '******'),
-    'password': os.getenv('DB_PASSWORD', '******'),  # ⚠️ По умолчанию тоже 'admin'
+    'database': os.getenv('DB_NAME', 'etl_airflow'),
+    'user': os.getenv('DB_USER', 'admin'),
+    'password': os.getenv('DB_PASSWORD', 'admin'),  # ⚠️ По умолчанию тоже 'admin'
 }
 
 # Конфигурация API

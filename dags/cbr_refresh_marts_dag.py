@@ -132,12 +132,6 @@ def refresh_single_view(view_name, **context):
 
 # Создаем задачи
 
-create_log_table = PostgresOperator(
-    task_id='create_log_table',
-    postgres_conn_id='postgres_cbr',
-    sql=CREATE_LOG_TABLE_SQL,
-    dag=dag,
-)
 
 check_status = PythonOperator(
     task_id='check_marts_status',
@@ -234,7 +228,7 @@ report_task = PythonOperator(
 )
 
 # Порядок выполнения
-create_log_table >> check_status >> [
+check_status >> [
     refresh_daily_changes,
     refresh_weekly_stats,
     refresh_monthly_stats,
