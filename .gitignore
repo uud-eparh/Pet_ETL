@@ -1,61 +1,241 @@
-# .gitignore для Python/ETL проекта
-
-# Вендорные зависимости
+# Виртуальное окружение Python
 .venv/
 venv/
-env/
 ENV/
+env/
+env.bak/
+venv.bak/
+pythonenv*
 
-# Байт-код
+# Файлы Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+.python-version
+*.pyc
+*.pyo
+*.pyd
 
-# Логи и отчеты (можно хранить примеры)
-logs/*
-!logs/.gitkeep
-reports/*
-!reports/.gitkeep
+# Директории с данными и логами
+logs/
+data/
+reports/
+*.log
+*.log.*
+*.csv
+*.xlsx
+*.parquet
+*.feather
 
-# Данные (кроме тестовых примеров)
-data/*
-!data/*_test.json
-!data/.gitkeep
+# Файлы конфиденциальной информации
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+secrets/
+credentials.json
+*.key
+*.pem
+*.crt
 
-# IDE
+# Docker volumes (данные контейнеров)
+docker-volumes/
+pgdata/
+postgres_data/
+grafana_data/
+redis_data/
+
+# Файлы IDE и редакторов
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Операционные системы
+*~
 .DS_Store
-Thumbs.db
-
-# Базы данных (локальные)
-*.db
-*.sqlite3
-pgdata/
-
-# Конфигурационные файлы с чувствительными данными
-secrets.ini
-config_local.py
-.env
+.project
+.classpath
+.settings/
+*.sublime-*
+*.code-workspace
 
 # Временные файлы
-temp/
 tmp/
+temp/
+*.tmp
+*.temp
+*.cache
+*.pid
+*.seed
+*.pid.lock
 
-# Докер
+# Файлы отчетов и тестовых данных
+reports/
+coverage/
+*.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Файлы базы данных (если используются локально)
+*.db
+*.sqlite
+*.sqlite3
+*.db3
+
+# Файлы архивов
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# Файлы дампов базы данных
+*.dump
+*.sql.gz
+*.backup
+*.bak
+
+# Файлы конфигурации Airflow (кроме шаблонов)
+airflow.cfg
+airflow.db
+webserver_config.py
+!webserver_config.py.example
+
+# Файлы конфигурации Jupyter (если используются)
+.ipynb_checkpoints/
+*.ipynb
+!*.ipynb.example
+
+# Директории с кешем
+.cache/
+.cache-loader/
+.cache-*
+
+# Директории с зависимостями
+node_modules/
+vendor/
+bower_components/
+
+# Файлы Docker
 docker-compose.override.yml
+.dockerignore
 
-# Пип
-pip-log.txt
+# Файлы Grafana (кроме provisioning)
+grafana/grafana.db
+grafana/plugins/
+!grafana/provisioning/
+!grafana/dashboards/README.md
 
-# В .gitignore добавьте:
-.env
-*.env
-.env.local
-.env.*.local
-secrets/
-credentials/
+# Файлы Airflow
+logs/
+dags/__pycache__/
+dags/*.pyc
+!dags/__init__.py
+
+# Файлы тестов
+test-results/
+test-reports/
+*.test
+
+# Файлы с API ключами
+*.key
+*.p12
+*.pfx
+*.keystore
+service-account.json
+*.secret
+
+# Документация (если генерируется)
+docs/_build/
+docs/build/
+site/
+
+# Файлы сборки
+dist/
+build/
+*.egg-info/
+*.egg
+*.whl
+*.tar.bz2
+
+# Файлы Jupyter Notebook (если используются)
+*.ipynb_checkpoints/
+*.ipynb
+!.example.ipynb
+
+# Файлы VS Code Remote
+.vscode-server/
+.vscode-remote/
+
+# Файлы журналов Docker
+.docker/
+docker-compose.log
+
+# Файлы бэкапов
+*.backup
+*.back
+*.old
+*.orig
+
+# Файлы, созданные во время тестирования
+*.coverage.*
+*.coverage
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+pytestdebug.log
+
+# Файлы для конкретных ОС
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Служебные файлы Git
+.gitattributes
+.gitignore
+.gitmodules
+.git/
+
+# Файлы с большими данными (опционально)
+data/raw/
+data/processed/
+data/external/
+data/interim/
+!data/.gitkeep
+
+# Файлы с секретами (примеры)
+!*.example
+!*.sample
+!*.template
+!*.dist
+
+# Файлы конфигурации (кроме шаблонов)
+config.local.yaml
+config.dev.yaml
+config.prod.yaml
+*.local
+*.dev
+*.prod
+
+# Файлы метаданных Airflow
+dags/__pycache__/
+dags/*.db
+dags/*.log
+dags/*.pid
+dags/*.airflow
+
+# Файлы логов приложений
+*.log
+*.log.*
+logs/
+!logs/.gitkeep

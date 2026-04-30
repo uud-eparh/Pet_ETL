@@ -1,18 +1,169 @@
-services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: cbr_exchange_db
-    environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-exchange_rates}
-    ports:
-      - "${DB_PORT:-6432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init_db:/docker-entrypoint-initdb.d
-    restart: unless-stopped
-    env_file:
-      - .env
+# Сети для связи между контейнерами
+networks:
+  # Создаем изолированную сеть для наших сервисов
+  airflow-net:
+    driver: bridge
+    name: airflow-net  # фиксированное имя сети
+
+# Постоянные тома для хранения данных
 volumes:
+  # Том для данных PostgreSQL (чтобы не терять БД при перезапуске)
   postgres_data:
+    name: postgres_data
+  # Том для данных Grafana
+  grafana_data:
+    name: grafana_data
+
+# Сервисы (контейнеры)
+services:
+  # === 1. PostgreSQL (общая база данных) ===
+  postgres:
+    # Используем официальный образ PostgreSQL 15
+    image: postgres:15
+    # Имя контейнера для удобства ссылок
+    container_name: etl-postgres
+    # Переменные окружения для инициализации БД
+    environment:
+      # Имя базы данных (одна база для всего)
+      POSTGRES_DB: etl_airflow
+      # Пользователь (везде admin)
+      POSTGRES_USER: admin
+      # Пароль (везде admin)
+      POSTGRES_PASSWORD: admin
+      # Дополнительная настройка: кодировка UTF-8
+      POSTGRES_ENCODING: UTF8
+    # Проброс порта: хост:контейнер
+    ports:
+      # Используем порт 15433 на хосте
+      - "15433:5432"
+    # Монтируем SQL скрипты для инициализации
+    volumes:
+      # Том для постоянного хранения данных БД
+      - postgres_data:/var/lib/postgresql/data
+      # Монтируем папку с init скриптами
+      # Они выполнятся только при первом запуске (если БД пустая)
+      - ./init_db:/docker-entrypoint-initdb.d
+      # Монтируем папку для бэкапов (опционально)
+      - ./backups:/backups
+    # Проверка здоровья контейнера
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d etl_airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Автоматический перезапуск
+    restart: unless-stopped
+    # Подключаем к сети
+    networks:
+      - airflow-net
+
+  # === 2. Airflow (веб-сервер) ===
+  airflow-webserver:
+    image: apache/airflow:2.10.3
+    container_name: etl-airflow-webserver
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "7005:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./logs:/opt/airflow/logs
+      - ./requirements.txt:/opt/airflow/requirements.txt
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://admin:admin@postgres:5432/etl_airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: secretkey123456789
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: Europe/Moscow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW_CONN_POSTGRES_CBR: postgresql://admin:admin@postgres:5432/etl_airflow
+      CBR_DB_SCHEMA_RAW: cbr_raw
+      CBR_DB_SCHEMA_DM: cbr_dm
+      PYTHONPATH: /opt/airflow:/opt/airflow/src
+    command: >
+      bash -c "
+        pip install --no-cache-dir -r /opt/airflow/requirements.txt &&
+        airflow db init &&
+        airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com 2>/dev/null || true &&
+        airflow webserver
+      "
+    restart: unless-stopped
+    networks:
+      - airflow-net
+
+  # === 3. Airflow (шедулер) ===
+  airflow-scheduler:
+    image: apache/airflow:2.10.3
+    container_name: etl-airflow-scheduler
+    depends_on:
+      - airflow-webserver
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./logs:/opt/airflow/logs
+      - ./requirements.txt:/opt/airflow/requirements.txt
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://admin:admin@postgres:5432/etl_airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: Europe/Moscow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW_CONN_POSTGRES_CBR: postgresql://admin:admin@postgres:5432/etl_airflow
+      CBR_DB_SCHEMA_RAW: cbr_raw
+      CBR_DB_SCHEMA_DM: cbr_dm
+      PYTHONPATH: /opt/airflow:/opt/airflow/src
+    command: >
+      bash -c "
+        pip install --no-cache-dir -r /opt/airflow/requirements.txt &&
+        airflow scheduler
+      "
+    restart: unless-stopped
+    networks:
+      - airflow-net
+
+  # === 4. VSCode в браузере (code-server) ===
+  vscode:
+    build:
+      context: .
+      dockerfile: Dockerfile.vscode
+    container_name: etl-vscode
+    ports:
+      - "7090:8080"
+    volumes:
+      - ./:/home/coder/project
+      - ./.git:/home/coder/project/.git
+    environment:
+      PASSWORD: admin
+    command: ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "password"]
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - airflow-net
+
+  # === 5. Grafana ===
+  grafana:
+    image: grafana/grafana:latest
+    container_name: etl-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      # Администратор
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      # Автоматически подключать datasource из provisioning
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/cbr_analytics.json
+    volumes:
+      # Том для постоянного хранения данных Grafana
+      - grafana_data:/var/lib/grafana
+      # Provisioning конфигурации
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      # Готовые дашборды
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - airflow-net

@@ -1,0 +1,13 @@
+# grafana/provisioning/dashboards/dashboards.yaml
+apiVersion: 1
+
+providers:
+  - name: 'CBR Dashboards'
+    orgId: 1
+    folder: 'ЦБ РФ'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10
+    options:
+      path: /var/lib/grafana/dashboards
