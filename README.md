@@ -34,9 +34,9 @@ git clone <https://github.com/uud-eparh/Pet_ETL.git>
 cd Pet_001_ETL
 Настройте виртуальное окружение:
 
-bash
+```bash
 python -m venv .venv
-
+```
 ### Windows:
 .venv\Scripts\activate
 
@@ -44,45 +44,44 @@ python -m venv .venv
 source .venv/bin/activate
 Установите зависимости:
 
-bash
+```bash
 pip install -r requirements.txt
+```
 Запустите базу данных:
 
-bash
+```bash
 docker-compose up -d
+```
 Настройте конфигурацию (при необходимости):
 
-bash
 ### Отредактируйте config.py если нужно изменить настройки
 Использование:
 Базовый запуск:
 
-bash
+```bash
 python main.py
-Загрузка исторических данных:
+# Загрузка исторических данных:
 
-bash
-### За последние 30 дней
+# За последние 30 дней
 python main.py --mode historical --historical-last-days 30
 
-### За конкретный период
+# За конкретный период
 python main.py --mode historical --start-date 2024-01-01 --end-date 2024-01-31
 
-### Только ежедневные данные:
+# Только ежедневные данные:
 
-bash
 python main.py --mode daily-only --target-date 2024-01-15
-
+```
 
 ### Скрипты для разных ОС:
 
-bash
+```bash
 #### Windows
 run_etl.bat
 
 #### Linux/Mac
 ./run_etl.sh --mode historical --historical-last-days 7
-
+```
 ### 🗄️ Структура проекта
 ```text
 Pet_001_ETL/
@@ -137,10 +136,10 @@ docker-compose.yml - настройка PostgreSQL контейнера
 Частые проблемы:
 Не удается подключиться к БД:
 
-bash
+```bash
 ### Проверьте запущен ли Docker
 docker ps
-
+```
 ### Проверьте порт
 netstat -an | grep 6432
 Ошибки API Центробанка:
@@ -150,9 +149,9 @@ API может быть недоступно в выходные
 
 Не хватает прав:
 
-bash
+```bash
 ### Для Linux скрипта
 chmod +x run_etl.sh
-
+```
 ### Для директорий
 chmod 755 logs reports data
