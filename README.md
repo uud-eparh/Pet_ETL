@@ -84,7 +84,7 @@ run_etl.bat
 ./run_etl.sh --mode historical --historical-last-days 7
 
 ### 🗄️ Структура проекта
-text
+```text
 Pet_001_ETL/
 ├── src/                    # Исходный код
 │   ├── extractors/         # Модули извлечения данных
@@ -104,7 +104,7 @@ Pet_001_ETL/
 ├── docker-compose.yml      # Конфигурация Docker
 ├── requirements.txt        # Зависимости Python
 └── README.md              # Документация
-
+```
 🗄️ Структура базы данных
 Таблица exchange_rates:
 
