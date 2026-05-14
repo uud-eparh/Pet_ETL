@@ -2,6 +2,10 @@
 
 Автоматический сбор ежедневных и ежемесячных курсов валют из API Центробанка РФ.
 
+## 🏗️ Архитектура
+
+[API ЦБ РФ] → [Extractors] → [Transform] → [PostgreSQL]
+
 ## 📋 Функциональность
 
 ### Основные возможности:
@@ -29,62 +33,59 @@
 ### Установка:
 
 1. **Клонируйте репозиторий:**
-bash
-git clone <https://github.com/uud-eparh/Pet_ETL.git>
-cd Pet_001_ETL
-Настройте виртуальное окружение:
+```bash
+git clone https://github.com/uud-eparh/Pet_ETL.git
+cd Pet_ETL
+```
 
+2. **Настройте виртуальное окружение:**
 ```bash
 python -m venv .venv
 ```
-### Windows:
-.venv\Scripts\activate
+- Windows: `.venv\Scripts\activate`
+- Linux/Mac: `source .venv/bin/activate`
 
-### Linux/Mac:
-source .venv/bin/activate
-Установите зависимости:
-
+3. **Установите зависимости:**
 ```bash
 pip install -r requirements.txt
 ```
-Запустите базу данных:
 
+4. **Запустите базу данных:**
 ```bash
 docker-compose up -d
 ```
-Настройте конфигурацию (при необходимости):
 
-### Отредактируйте config.py если нужно изменить настройки
-Использование:
-Базовый запуск:
+5. **Настройте конфигурацию** (при необходимости отредактируйте `config.py`)
 
+### Использование:
+
+**Базовый запуск:**
 ```bash
 python main.py
-# Загрузка исторических данных:
+```
 
+**Загрузка исторических данных:**
+```bash
 # За последние 30 дней
 python main.py --mode historical --historical-last-days 30
 
 # За конкретный период
 python main.py --mode historical --start-date 2024-01-01 --end-date 2024-01-31
+```
 
-# Только ежедневные данные:
-
+**Только ежедневные данные:**
+```bash
 python main.py --mode daily-only --target-date 2024-01-15
 ```
 
 ### Скрипты для разных ОС:
+- Windows: `run_etl.bat`
+- Linux/Mac: `./run_etl.sh --mode historical --historical-last-days 7`
 
-```bash
-#### Windows
-run_etl.bat
+## 🗄️ Структура проекта
 
-#### Linux/Mac
-./run_etl.sh --mode historical --historical-last-days 7
-```
-### 🗄️ Структура проекта
 ```text
-Pet_001_ETL/
+Pet_ETL/
 ├── src/                    # Исходный код
 │   ├── extractors/         # Модули извлечения данных
 │   │   ├── daily_extractor.py     # SOAP API (ежедневные)
@@ -102,56 +103,60 @@ Pet_001_ETL/
 ├── main.py                 # Главный скрипт ETL
 ├── docker-compose.yml      # Конфигурация Docker
 ├── requirements.txt        # Зависимости Python
-└── README.md              # Документация
+└── README.md               # Документация
 ```
-🗄️ Структура базы данных
-Таблица exchange_rates:
 
-Поле	Тип	Описание
-id	SERIAL	Первичный ключ
-currency_code	VARCHAR(3)	Код валюты (USD, EUR)
-currency_name	VARCHAR(100)	Название валюты
-exchange_rate	DECIMAL(12,6)	Курс к рублю
-rate_date	DATE	Дата курса
-rate_type	VARCHAR(10)	Тип: 'daily' или 'monthly'
-nominal	INTEGER	Номинал валюты
-load_timestamp	TIMESTAMP	Время загрузки
-Индексы:
-Уникальный индекс: (currency_code, rate_date, rate_type)
-Индекс по дате: rate_date
-Индекс по валюте: currency_code
+## 🗄️ Структура базы данных
 
-### 🔧 Конфигурация
-Основные файлы конфигурации:
-config.py - основные настройки:
-Параметры подключения к БД
-URL API Центробанка
-Таймауты и лимиты
-historical_config.py - предопределенные периоды:
-last_week, last_month, last_quarter
-Годовые периоды (2023, 2024)
-docker-compose.yml - настройка PostgreSQL контейнера
+### Таблица `exchange_rates`:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| id | SERIAL | Первичный ключ |
+| currency_code | VARCHAR(3) | Код валюты (USD, EUR) |
+| currency_name | VARCHAR(100) | Название валюты |
+| exchange_rate | DECIMAL(12,6) | Курс к рублю |
+| rate_date | DATE | Дат курса |
+| rate_type | VARCHAR(10) | Тип: 'daily' или 'monthly' |
+| nominal | INTEGER | Номинал валюты |
+| load_timestamp | TIMESTAMP | Время загрузки |
+
+### Индексы:
+- Уникальный индекс: (currency_code, rate_date, rate_type)
+- Индекс по дате: rate_date
+- Индекс по валюте: currency_code
+
+## 🔧 Конфигурация
+
+**Основные файлы конфигурации:**
+
+- `config.py` - основные настройки (подключение к БД, URL API, таймауты и лимиты)
+- `historical_config.py` - предопределенные периоды (last_week, last_month, last_quarter, 2023, 2024)
+- `docker-compose.yml` - настройка PostgreSQL контейнера
 
 ## 🐛 Устранение неполадок
-Частые проблемы:
-Не удается подключиться к БД:
 
+### Частые проблемы:
+
+**Не удается подключиться к БД:**
 ```bash
-### Проверьте запущен ли Docker
+# Проверьте запущен ли Docker
 docker ps
+
+# Проверьте порт
+netstat -an | grep 5432
 ```
-### Проверьте порт
-netstat -an | grep 6432
-Ошибки API Центробанка:
-Проверьте интернет-подключение
-API может быть недоступно в выходные
-Используйте --skip-weekends для пропуска выходных
 
-Не хватает прав:
+**Ошибки API Центробанка:**
+- Проверьте интернет-подключение
+- API может быть недоступно в выходные
+- Используйте `--skip-weekends` для пропуска выходных
 
+**Не хватает прав:**
 ```bash
-### Для Linux скрипта
+# Для Linux скрипта
 chmod +x run_etl.sh
-```
-### Для директорий
+
+# Для директорий
 chmod 755 logs reports data
+```
